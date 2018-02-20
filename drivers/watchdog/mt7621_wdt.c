@@ -54,6 +54,8 @@ static inline u32 rt_wdt_r32(unsigned reg)
 
 static int mt7621_wdt_ping(struct watchdog_device *w)
 {
+//	pr_crit("watchdog ping\n");
+
 	rt_wdt_w32(TIMER_REG_TMRSTAT, TMR1CTL_RESTART);
 
 	return 0;
@@ -61,8 +63,9 @@ static int mt7621_wdt_ping(struct watchdog_device *w)
 
 static int mt7621_wdt_set_timeout(struct watchdog_device *w, unsigned int t)
 {
+//	pr_crit("watchdog set timeout %u\n", t);
 	w->timeout = t;
-	rt_wdt_w32(TIMER_REG_TMR1LOAD, t * 1000);
+	rt_wdt_w32(TIMER_REG_TMR1LOAD, t * 250);
 	mt7621_wdt_ping(w);
 
 	return 0;
@@ -72,8 +75,10 @@ static int mt7621_wdt_start(struct watchdog_device *w)
 {
 	u32 t;
 
-	/* set the prescaler to 1ms == 1000us */
-	rt_wdt_w32(TIMER_REG_TMR1CTL, 1000 << TMR1CTL_PRESCALE_SHIFT);
+//	pr_crit("watchdog start\n");
+
+	/* set the prescaler to 4ms == 4000us */
+	rt_wdt_w32(TIMER_REG_TMR1CTL, 4000 << TMR1CTL_PRESCALE_SHIFT);
 
 	mt7621_wdt_set_timeout(w, w->timeout);
 
@@ -121,8 +126,8 @@ static struct watchdog_ops mt7621_wdt_ops = {
 static struct watchdog_device mt7621_wdt_dev = {
 	.info = &mt7621_wdt_info,
 	.ops = &mt7621_wdt_ops,
-	.min_timeout = 1,
-	.max_timeout = 0xfffful / 1000,
+	.min_timeout = 4,
+	.max_timeout = 0xfffful / 250,
 };
 
 static int mt7621_wdt_probe(struct platform_device *pdev)
@@ -159,6 +164,8 @@ static int mt7621_wdt_remove(struct platform_device *pdev)
 
 static void mt7621_wdt_shutdown(struct platform_device *pdev)
 {
+//	pr_crit("watchdog shutdown\n");
+
 	mt7621_wdt_stop(&mt7621_wdt_dev);
 }
 
